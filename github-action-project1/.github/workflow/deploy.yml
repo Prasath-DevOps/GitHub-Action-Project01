@@ -1,4 +1,4 @@
-name: Deploy Website
+name: DevOps Mini Project
 
 on:
   push:
@@ -6,12 +6,18 @@ on:
       - main
 
 jobs:
-  deploy:
+  test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Test GitHub Actions
-        run: echo "GitHub Actions is working!"
+      - name: Show Project Files
+        run: |
+          echo "GitHub Actions is running successfully!"
+          echo "Project files:"
+          ls -la
+
+      - name: Test Docker
+        run: docker --version
