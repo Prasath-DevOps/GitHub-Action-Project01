@@ -1,30 +1,3 @@
-name: DevOps Mini Project
-
-on:
-  push:
-    branches:
-      - main
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Build Docker Image
-        run: docker build -t github-actions-demo .
-
-      - name: Copy Project to EC2
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          source: "Dockerfile,index.html"
-          target: "/home/ubuntu/github-action-project1"
-
       - name: Deploy on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -32,12 +5,16 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            mkdir -p /home/ubuntu/github-action-project1
             cd /home/ubuntu/github-action-project1
+
+            echo "Files on EC2:"
+            ls -la
 
             docker stop github-actions-demo-container || true
             docker rm github-actions-demo-container || true
 
-            docker build -t github-actions-demo .
+            docker build --no-cache -t github-actions-demo .
 
             docker run -d \
               --name github-actions-demo-container \
