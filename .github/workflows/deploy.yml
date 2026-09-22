@@ -6,18 +6,40 @@ on:
       - main
 
 jobs:
-  test:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Show Project Files
-        run: |
-          echo "GitHub Actions is running successfully!"
-          echo "Project files:"
-          ls -la
+      - name: Build Docker Image
+        run: docker build -t github-actions-demo .
 
-      - name: Test Docker
-        run: docker --version
+      - name: Copy Project to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "Dockerfile,index.html"
+          target: "/home/ubuntu/github-action-project1"
+
+      - name: Deploy on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/github-action-project1
+
+            docker stop github-actions-demo-container || true
+            docker rm github-actions-demo-container || true
+
+            docker build -t github-actions-demo .
+
+            docker run -d \
+              --name github-actions-demo-container \
+              -p 80:80 \
+              github-actions-demo
